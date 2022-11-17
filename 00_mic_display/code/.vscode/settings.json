@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "hk32f030m.h": "c",
+        "digital_tube.h": "c",
+        "usart.h": "c"
+    }
+}
