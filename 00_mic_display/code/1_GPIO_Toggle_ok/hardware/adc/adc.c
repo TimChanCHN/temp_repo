@@ -36,3 +36,28 @@ void adc1_init(void)
 	ADC_StartOfConversion(ADC1);
 }
 
+void adc1_enable(void)
+{
+    ADC_Cmd(ADC1, ENABLE);
+}
+
+void adc1_disable(void)
+{
+    ADC_Cmd(ADC1, DISABLE);
+}
+
+void adc1_value_get(uint16_t *p_value)
+{
+    ADC_ChannelConfig(ADC1, ADC_Channel_4, ADC_SampleTime_239_5Cycles);
+
+    /**
+     * 启动转换
+     */
+    ADC_StartOfConversion(ADC1);
+
+    while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET);
+
+    *p_value = ADC_GetConversionValue(ADC1);
+}
+
+

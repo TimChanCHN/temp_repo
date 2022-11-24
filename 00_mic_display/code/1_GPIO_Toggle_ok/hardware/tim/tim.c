@@ -1,6 +1,23 @@
 #include "tim.h"
 #include "hk32f030m.h"
 
+static uint8_t swtimer_1s = 0;
+
+void set_swtimer(uint8_t value)
+{
+    swtimer_1s = value;
+}
+
+uint8_t get_swtimer_value(void)
+{
+    return swtimer_1s;
+}
+
+void clear_swtimer(void)
+{
+    swtimer_1s = 0;
+}
+
 /*TIMER配置*/
 void TIM_Config(void)
 {
@@ -19,6 +36,7 @@ void TIM_Config(void)
     NVIC_InitStructure.NVIC_IRQChannelCmd      = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
 
+    // 1ms
     TIM_TimeBaseStructure.TIM_Period        = 1000;					// 计数1000下，触发定时器中断
     TIM_TimeBaseStructure.TIM_Prescaler     = prescaler_value;
     TIM_TimeBaseStructure.TIM_ClockDivision = 0;
@@ -42,11 +60,10 @@ void TIM2_IRQHandler(void)
         TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 
 		i++;
-
 		if (i == 1000)
 		{
 			i = 0;
-			GPIOA->ODR ^= GPIO_Pin_1;
+			set_swtimer(1);
 		}
     }
 }

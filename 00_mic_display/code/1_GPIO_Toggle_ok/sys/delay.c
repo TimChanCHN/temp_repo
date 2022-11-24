@@ -2,7 +2,7 @@
 
 void delayus(uint32_t i)
 {
-	i*=5;//1US
+	i*=5;					//1US
 	while(i--);
 } 
 
