@@ -14,12 +14,15 @@ uint8_t g_tube_status = 0;
 typedef void (*p_fun)(void);
 p_fun func_light_ctrl[4];
 uint16_t vbat = 0;
+uint16_t vbat_temp[5] = {0};
+uint16_t index = 0;
 
-void get_adc_value_ave(void)
+uint16_t get_adc_value_ave(void)
 {
 	uint16_t value[5] = {0};
 	uint16_t i = 0;
 	uint16_t sum = 0;
+	uint16_t vbat_value = 0;
 
 	for (i = 0; i < 5; i++)
 	{
@@ -30,10 +33,35 @@ void get_adc_value_ave(void)
 	}
 
 	// TODO: 电阻分压比例估计需要再调
+	// TODO: 电阻分压后，乘一个比例系数0.98作为修正
+	vbat_value = sum / 5;
+	vbat_value = (vbat_value * 3300)/4095;		// pin脚采样到的电压
+	vbat_value = (vbat_value * 42)/33;			// 得到分压前电压
+	vbat_value = vbat_value * 98/100;			// 乘0.98作为修正
+	vbat_temp[index] = vbat_value;
+	index++;
+
+	if (index == 5)
+	{
+		index = 0;
+	}
+	trace_info("[TEMP]vbat_value = %d mv\r\n", vbat_value);
+
+	return vbat_value;
+}
+
+void get_adc_final_value(void)
+{
+	uint8_t i = 0;
+	uint16_t sum = 0;
+
+	for (i = 0; i < 5; i++)
+	{
+		sum += vbat_temp[i];
+	}
+
 	vbat = sum / 5;
-	vbat = (vbat * 3300)/4095;
-	vbat = (vbat * 42)/33;
-	trace_info("sum = %d, vbat = %d mv\r\n", sum, vbat);
+	trace_info("[FINAL] sum = %d, VBAT value = %d mv\r\n", sum, vbat);
 }
 
 // 4.2V满格
@@ -107,7 +135,9 @@ int main(void)
 
 	trace_info("hello world!\r\n");
 
-	get_adc_value_ave();
+	// 最初的vat电压显示
+	vbat = get_adc_value_ave();
+	index = 0;
 	init_display_digital();
 
 	while (1)
@@ -116,15 +146,16 @@ int main(void)
 		{
 			clear_swtimer();
 			run_display_digital();
-			
+			get_adc_value_ave();
+
 			cnt++;
 			trace_info("cnt = %d\r\n", cnt);
 			trace_info("\r\n");
 
-			if (cnt == 10)
+			if (cnt == 5)
 			{
 				cnt = 0;
-				get_adc_value_ave();
+				get_adc_final_value();
 			}
 		}
 
